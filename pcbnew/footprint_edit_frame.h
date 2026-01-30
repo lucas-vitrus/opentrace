@@ -93,6 +93,10 @@ public:
     void CloseFootprintEditor( wxCommandEvent& Event );
     void OnExitKiCad( wxCommandEvent& aEvent );
 
+    void onSignIn( wxCommandEvent& event );
+    void onSignOut( wxCommandEvent& event );
+    void onAuthStateChanged( wxCommandEvent& event );
+
     /**
      * Switch the currently used canvas (Cairo / OpenGL).
      *

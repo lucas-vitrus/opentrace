@@ -57,5 +57,11 @@ namespace KIPLATFORM
 
             return result;
         }
+
+        bool EraseSecret( const wxString& aService, const wxString& aKey )
+        {
+            wxString display = aService + wxS( ":" ) + aKey;
+            return CredDeleteW( display.wc_str(), CRED_TYPE_GENERIC, 0 );
+        }
     }
 }

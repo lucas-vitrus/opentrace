@@ -157,6 +157,8 @@ public:
         bool  show_search;
         bool  show_net_inspector;
         bool  design_blocks_show;
+        bool  ai_chat_show;
+        int   ai_chat_width;
         int   design_blocks_panel_docked_width;
         int   design_blocks_panel_float_width;
         int   design_blocks_panel_float_height;
@@ -272,4 +274,6 @@ public:
 
     ACTION_PLUGIN_SETTINGS_LIST m_VisibleActionPlugins;
 };
+
+const wxAuiPaneInfo& defaultAIChatPaneInfo( wxWindow* aWindow );
 

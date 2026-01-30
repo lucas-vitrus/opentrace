@@ -48,6 +48,7 @@
 #include <tool/common_tools.h>
 #include <tool/tool_manager.h>
 #include <tools/pcb_actions.h>
+#include <widgets/ai_chat_panel.h>
 #include <widgets/appearance_controls.h>
 #include <widgets/pcb_design_block_pane.h>
 #include <widgets/layer_box_selector.h>
@@ -181,7 +182,8 @@ std::optional<TOOLBAR_CONFIGURATION> PCB_EDIT_TOOLBAR_SETTINGS::DefaultToolbarCo
         // Tools to show/hide toolbars:
         config.AppendSeparator()
               .AppendAction( PCB_ACTIONS::showLayersManager )
-              .AppendAction( ACTIONS::showProperties );
+              .AppendAction( ACTIONS::showProperties )
+              .AppendAction( PCB_ACTIONS::showAIChat );
 
         /* TODO (ISM): Support context menus in toolbars
         PCB_SELECTION_TOOL*          selTool = m_toolManager->GetTool<PCB_SELECTION_TOOL>();
@@ -338,6 +340,7 @@ std::optional<TOOLBAR_CONFIGURATION> PCB_EDIT_TOOLBAR_SETTINGS::DefaultToolbarCo
             config.AppendAction( PCB_ACTIONS::importNetlist );
 
         config.AppendAction( PCB_ACTIONS::runDRC );
+        config.AppendAction( PCB_ACTIONS::cloudAutoroute );
 
         config.AppendSeparator();
         config.AppendAction( PCB_ACTIONS::showEeschema );
@@ -640,6 +643,43 @@ void PCB_EDIT_FRAME::ToggleNetInspector()
     {
         m_netInspectorPanel->SaveSettings();
         settings->m_AuiPanels.net_inspector_width = m_netInspectorPanel->GetSize().x;
+        m_auimgr.Update();
+    }
+}
+
+
+void PCB_EDIT_FRAME::ToggleAIChat()
+{
+    PCBNEW_SETTINGS* settings = GetPcbNewSettings();
+    wxAuiPaneInfo&   aiChatPanel = m_auimgr.GetPane( wxS( "AIChat" ) );
+    wxAuiPaneInfo&   appearancePanel = m_auimgr.GetPane( wxS( "LayersManager" ) );
+    wxAuiPaneInfo&   selectionFilterPanel = m_auimgr.GetPane( wxS( "SelectionFilter" ) );
+
+    bool show = aiChatPanel.IsShown();
+    show = !show;
+
+    aiChatPanel.Show( show );
+    settings->m_AuiPanels.ai_chat_show = show;
+
+    if( show )
+    {
+        // Hide the Appearance and Selection Filter panes (panel 4) to keep the right section cleaner
+        // Save the current state so we can restore it later
+        if( appearancePanel.IsShown() || selectionFilterPanel.IsShown() )
+        {
+            // Remember that they were shown so we can restore them
+            m_show_layer_manager_tools = true;
+            appearancePanel.Show( false );
+            selectionFilterPanel.Show( false );
+        }
+        SetAuiPaneSize( m_auimgr, aiChatPanel, settings->m_AuiPanels.ai_chat_width, -1 );
+    }
+    else
+    {
+        // Restore the Appearance and Selection Filter panes to their previous state
+        appearancePanel.Show( m_show_layer_manager_tools );
+        selectionFilterPanel.Show( m_show_layer_manager_tools );
+        settings->m_AuiPanels.ai_chat_width = m_aiChatPanel->GetSize().x;
         m_auimgr.Update();
     }
 }

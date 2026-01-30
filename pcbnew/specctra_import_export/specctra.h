@@ -89,6 +89,21 @@ class SPECCTRA_DB;
  */
 void ExportBoardToSpecctraFile( BOARD* aBoard, const wxString& aFullFilename );
 
+/**
+ * @brief Helper method to export board to DSN string
+ * @param aBoard board object
+ * @return DSN content as a string
+ */
+std::string ExportBoardToSpecctraString( BOARD* aBoard );
+
+/**
+ * @brief Helper method to import session from string content
+ * @param aBoard board object to apply routing to
+ * @param aSesContent SES file content as a string
+ * @return true on success
+ */
+bool ImportSpecctraSessionFromString( BOARD* aBoard, const std::string& aSesContent );
+
 
 /**
  * The DSN namespace and returns the C string representing a SPECCTRA_DB::keyword.
@@ -3729,6 +3744,14 @@ public:
      * @throw IO_ERROR if there is a lexer or parser error.
      */
     void LoadSESSION( const wxString& aFilename );
+
+    /**
+     * A recursive descent parser for a SPECCTRA DSN "session" from string content.
+     *
+     * @param aSesContent The session file content as a string.
+     * @throw IO_ERROR if there is a lexer or parser error.
+     */
+    void LoadSESSIONFromString( const std::string& aSesContent );
 
     /**
      * Write the internal PCB instance out as a SPECTRA DSN format file.

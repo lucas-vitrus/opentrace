@@ -59,6 +59,7 @@
 
 #include "specctra.h"
 #include <macros.h>
+#include <richio.h>
 
 
 namespace DSN {
@@ -269,6 +270,26 @@ void SPECCTRA_DB::LoadPCB( const wxString& aFilename )
 void SPECCTRA_DB::LoadSESSION( const wxString& aFilename )
 {
     FILE_LINE_READER curr_reader( aFilename );
+
+    PushReader( &curr_reader );
+
+    if( NextTok() != T_LEFT )
+        Expecting( T_LEFT );
+
+    if( NextTok() != T_session )
+        Expecting( T_session );
+
+    SetSESSION( new SESSION() );
+
+    doSESSION( m_session );
+
+    PopReader();
+}
+
+
+void SPECCTRA_DB::LoadSESSIONFromString( const std::string& aSesContent )
+{
+    STRING_LINE_READER curr_reader( aSesContent, wxT( "SES from cloud autoroute" ) );
 
     PushReader( &curr_reader );
 

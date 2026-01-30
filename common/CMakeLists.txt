@@ -94,6 +94,16 @@ set( KICOMMON_SRCS
     git/git_backend.cpp
     git/libgit_backend.cpp
 
+    # Auth
+    auth/auth_manager.cpp
+
+    # Conversation database (local SQLite cache for AI conversations)
+    conversation_db.cpp
+    conversation_sync.cpp
+
+    # Process management
+    process/python_process_manager.cpp
+
     # Jobs
     jobs/job.cpp
     jobs/job_dispatcher.cpp
@@ -194,6 +204,9 @@ set( KICOMMON_SRCS
     widgets/wx_grid.cpp
     widgets/wx_html_report_panel.cpp
     widgets/wx_html_report_panel_base.cpp
+    ai_tool_executor.cpp
+    ai_backend_client.cpp
+    ai_diff_analyzer.cpp
 
     database/database_lib_settings.cpp
 
@@ -298,6 +311,12 @@ if( KICAD_IPC_API )
     )
 endif()
 
+if( WIN32 )
+    list( APPEND KICOMMON_SRCS
+        process_executor_win.cpp
+    )
+endif()
+
 add_library( kicommon SHARED
     ${KICOMMON_SRCS}
     )
@@ -346,6 +365,9 @@ target_link_libraries( kicommon
 
     # needed because of python_scripting.cpp
     ${PYTHON_LIBRARIES}
+
+    # needed for conversation_db.cpp (local SQLite cache)
+    SQLite::SQLite3
     )
 
 
@@ -366,12 +388,22 @@ include( ${KICAD_CMAKE_MODULE_PATH}/KiCadVersion.cmake )
 include( ${KICAD_CMAKE_MODULE_PATH}/CreateGitVersionHeader.cmake )
 create_git_version_header(${CMAKE_SOURCE_DIR})
 
+message(STATUS "KICAD_VERSION before regex: '${KICAD_VERSION}'")
+
 # Extract the major and minor build version as a string
 string( REGEX MATCH
         "([0-9]+)\\.([0-9]+)\\.([0-9]+)"
         KICAD_MAJOR_MINOR_PATCH_VERSION
         "${KICAD_VERSION}"
     )
+
+message(STATUS "KICAD_MAJOR_MINOR_PATCH_VERSION after regex: '${KICAD_MAJOR_MINOR_PATCH_VERSION}'")
+
+# Fallback if regex didn't match
+if(NOT KICAD_MAJOR_MINOR_PATCH_VERSION OR KICAD_MAJOR_MINOR_PATCH_VERSION STREQUAL "")
+    set(KICAD_MAJOR_MINOR_PATCH_VERSION "1.0.0")
+    message(WARNING "Could not extract version from KICAD_VERSION, using fallback: ${KICAD_MAJOR_MINOR_PATCH_VERSION}")
+endif()
 
 set_target_properties( kicommon PROPERTIES
     OUTPUT_NAME     kicommon
@@ -577,6 +609,8 @@ set( COMMON_WIDGET_SRCS
     widgets/wx_treebook.cpp
     widgets/webview_panel.cpp
     widgets/zoom_correction_ctrl.cpp
+    widgets/chat_message_panel.cpp
+    widgets/ai_chat_panel_base.cpp
     )
 
 set( COMMON_DRAWING_SHEET_SRCS
@@ -878,6 +912,7 @@ add_dependencies( common pegtl )
 target_include_directories( common PUBLIC
     $<TARGET_PROPERTY:pegtl,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:magic_enum,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:kiplatform,INTERFACE_INCLUDE_DIRECTORIES>
     )
 
 target_include_directories( common SYSTEM PUBLIC

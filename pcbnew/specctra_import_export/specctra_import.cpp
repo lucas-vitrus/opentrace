@@ -49,6 +49,7 @@
 #include <math/util.h>      // for KiROUND
 #include <pcbnew_settings.h>
 #include <string_utils.h>
+#include <richio.h>
 
 using namespace DSN;
 
@@ -596,6 +597,21 @@ bool ImportSpecctraSession( BOARD* aBoard, const wxString& fullFileName )
     LOCALE_IO   toggle;
 
     db.LoadSESSION( fullFileName );
+    db.FromSESSION( aBoard );
+
+    aBoard->GetConnectivity()->ClearRatsnest();
+    aBoard->BuildConnectivity();
+
+    return true;
+}
+
+
+bool ImportSpecctraSessionFromString( BOARD* aBoard, const std::string& aSesContent )
+{
+    SPECCTRA_DB db;
+    LOCALE_IO   toggle;
+
+    db.LoadSESSIONFromString( aSesContent );
     db.FromSESSION( aBoard );
 
     aBoard->GetConnectivity()->ClearRatsnest();

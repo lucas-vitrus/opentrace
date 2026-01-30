@@ -60,6 +60,7 @@
 #include <convert_basic_shapes_to_polygon.h>
 #include <geometry/geometry_utils.h>
 #include <pcbnew_settings.h>
+#include <richio.h>
 
 
 using namespace DSN;
@@ -135,6 +136,47 @@ void ExportBoardToSpecctraFile( BOARD* aBoard, const wxString& aFullFilename )
 
         // if an exception is thrown by FromBOARD() or ExportPCB(), then ~SPECCTRA_DB() will
         // close the file.
+    }
+    catch( ... )
+    {
+        db.RevertFOOTPRINTs( aBoard );
+        throw;
+    }
+}
+
+
+std::string ExportBoardToSpecctraString( BOARD* aBoard )
+{
+    SPECCTRA_DB db;
+
+    db.SetPCB( SPECCTRA_DB::MakePCB() );
+
+    LOCALE_IO toggle; // Switch the locale to standard C
+
+    // Build the board outlines *before* flipping footprints
+    if( !db.BuiltBoardOutlines( aBoard ) )
+        wxLogWarning( _( "Board outline is malformed. Run DRC for a full analysis." ) );
+
+    // DSN Images (=KiCad FOOTPRINTs and PADs) must be presented from the top view.  So we
+    // temporarily flip any footprints which are on the back side of the board to the front,
+    // and record this in the FOOTPRINT's flag field.
+    db.FlipFOOTPRINTs( aBoard );
+
+    try
+    {
+        aBoard->SynchronizeNetsAndNetClasses( false );
+        db.FromBOARD( aBoard );
+
+        // Use STRING_FORMATTER instead of FILE_OUTPUTFORMATTER
+        STRING_FORMATTER formatter;
+        DSN::PCB* pcb = db.GetPCB();
+        if( pcb )
+        {
+            pcb->Format( &formatter, 0 );
+        }
+
+        db.RevertFOOTPRINTs( aBoard );
+        return formatter.GetString();
     }
     catch( ... )
     {
