@@ -1,5 +1,6 @@
-# Trace - AI-Powered PCB Design Suite
+# TEST FORK OF Trace - A fork of AI-Powered PCB Design Suite
 
+** TEST *** 
 **Trace is a modified version of the KiCad EDA software, enhanced with AI-powered circuit design capabilities.**
 
 > **Important:** Trace is based on [KiCad](https://www.kicad.org/), an open-source electronics design automation suite. This is an independent fork created and maintained by the Trace team. Trace is not affiliated with, endorsed by, or supported by the KiCad project or The Linux Foundation.
